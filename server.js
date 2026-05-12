@@ -37,6 +37,10 @@ USSD ENDPOINT
 =====================================================
 */
 
+app.get("/", (req, res) => {
+    res.send("USSD Server is running");
+});
+
 app.post("/ussd", async (req, res) => {
 
     const text = (req.body.text || "").trim();
