@@ -1,7 +1,18 @@
 const express = require("express");
 const axios = require("axios");
+const cors = require("cors");
 
 const app = express();
+
+/*
+=====================================================
+ENABLE CORS
+=====================================================
+*/
+
+app.use(cors({
+    origin: "*"
+}));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -22,24 +33,37 @@ FETCH NEWS
 */
 
 async function fetchNews() {
+
     try {
+
         const res = await axios.get(NEWS_API);
+
         return res.data;
+
     } catch (err) {
+
         console.log("API Error:", err.message);
+
         return [];
     }
 }
 
 /*
 =====================================================
-USSD ENDPOINT
+HOME
 =====================================================
 */
 
 app.get("/", (req, res) => {
+
     res.send("USSD Server is running");
 });
+
+/*
+=====================================================
+USSD ENDPOINT
+=====================================================
+*/
 
 app.post("/ussd", async (req, res) => {
 
@@ -48,15 +72,16 @@ app.post("/ussd", async (req, res) => {
     res.set("Content-Type", "text/plain");
 
     /*
-    =======================
+    =====================================================
     MAIN MENU
-    =======================
+    =====================================================
     */
 
     if (text === "") {
 
         return res.send(
 `CON Welcome to Newsroom
+
 1. Latest News
 2. Sports
 3. Technology
@@ -66,26 +91,35 @@ app.post("/ussd", async (req, res) => {
     }
 
     /*
-    =======================
+    =====================================================
     LATEST NEWS
-    =======================
+    =====================================================
     */
 
     if (text === "1") {
 
         const news = await fetchNews();
 
-        if (!news.length) return res.send("END No news available");
+        if (!news.length) {
 
-        let response = "CON Latest News\n";
+            return res.send("END No news available");
+        }
+
+        let response = "CON Latest News\n\n";
 
         news.slice(0, 5).forEach((item, i) => {
 
-            const title = item.short_title || "No title";
-            const story = item.short_story || "";
+            const title =
+            item.short_title || "No title";
 
-            response += `${i + 1}. ${title}\n`;
-            response += `${story.substring(0, 40)}...\n\n`;
+            const story =
+            item.short_story || "";
+
+            response +=
+            `${i + 1}. ${title}\n`;
+
+            response +=
+            `${story.substring(0, 40)}...\n\n`;
         });
 
         response += "0. Back";
@@ -94,22 +128,32 @@ app.post("/ussd", async (req, res) => {
     }
 
     /*
-    =======================
+    =====================================================
     SPORTS
-    =======================
+    =====================================================
     */
 
     if (text === "2") {
 
         const news = await fetchNews();
-        const filtered = news.filter(n => n.category === "sports");
 
-        let response = "CON Sports News\n";
+        const filtered =
+        news.filter(
+            n =>
+            (n.category || "")
+            .toLowerCase() === "sports"
+        );
+
+        let response = "CON Sports News\n\n";
 
         filtered.slice(0, 5).forEach((item, i) => {
 
-            response += `${i + 1}. ${item.short_title}\n`;
-            response += `${(item.short_story || "").substring(0, 40)}...\n\n`;
+            response +=
+            `${i + 1}. ${item.short_title}\n`;
+
+            response +=
+            `${(item.short_story || "")
+            .substring(0, 40)}...\n\n`;
         });
 
         response += "0. Back";
@@ -118,22 +162,33 @@ app.post("/ussd", async (req, res) => {
     }
 
     /*
-    =======================
+    =====================================================
     TECHNOLOGY
-    =======================
+    =====================================================
     */
 
     if (text === "3") {
 
         const news = await fetchNews();
-        const filtered = news.filter(n => n.category === "technology");
 
-        let response = "CON Technology News\n";
+        const filtered =
+        news.filter(
+            n =>
+            (n.category || "")
+            .toLowerCase() === "technology"
+        );
+
+        let response =
+        "CON Technology News\n\n";
 
         filtered.slice(0, 5).forEach((item, i) => {
 
-            response += `${i + 1}. ${item.short_title}\n`;
-            response += `${(item.short_story || "").substring(0, 40)}...\n\n`;
+            response +=
+            `${i + 1}. ${item.short_title}\n`;
+
+            response +=
+            `${(item.short_story || "")
+            .substring(0, 40)}...\n\n`;
         });
 
         response += "0. Back";
@@ -142,22 +197,33 @@ app.post("/ussd", async (req, res) => {
     }
 
     /*
-    =======================
+    =====================================================
     ENTERTAINMENT
-    =======================
+    =====================================================
     */
 
     if (text === "4") {
 
         const news = await fetchNews();
-        const filtered = news.filter(n => n.category === "entertainment");
 
-        let response = "CON Entertainment News\n";
+        const filtered =
+        news.filter(
+            n =>
+            (n.category || "")
+            .toLowerCase() === "entertainment"
+        );
+
+        let response =
+        "CON Entertainment News\n\n";
 
         filtered.slice(0, 5).forEach((item, i) => {
 
-            response += `${i + 1}. ${item.short_title}\n`;
-            response += `${(item.short_story || "").substring(0, 40)}...\n\n`;
+            response +=
+            `${i + 1}. ${item.short_title}\n`;
+
+            response +=
+            `${(item.short_story || "")
+            .substring(0, 40)}...\n\n`;
         });
 
         response += "0. Back";
@@ -166,19 +232,22 @@ app.post("/ussd", async (req, res) => {
     }
 
     /*
-    =======================
+    =====================================================
     EXIT
-    =======================
+    =====================================================
     */
 
     if (text === "5") {
-        return res.send("END Thank you for using Newsroom");
+
+        return res.send(
+            "END Thank you for using Newsroom"
+        );
     }
 
     /*
-    =======================
+    =====================================================
     BACK
-    =======================
+    =====================================================
     */
 
     if (
@@ -187,8 +256,10 @@ app.post("/ussd", async (req, res) => {
         text === "3*0" ||
         text === "4*0"
     ) {
+
         return res.send(
 `CON Welcome to Newsroom
+
 1. Latest News
 2. Sports
 3. Technology
@@ -196,6 +267,12 @@ app.post("/ussd", async (req, res) => {
 5. Exit`
         );
     }
+
+    /*
+    =====================================================
+    INVALID
+    =====================================================
+    */
 
     return res.send("END Invalid choice");
 });
@@ -206,8 +283,13 @@ START SERVER
 =====================================================
 */
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log("USSD Server running on port", PORT);
+
+    console.log(
+        "USSD Server running on port",
+        PORT
+    );
 });
