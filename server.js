@@ -1,5 +1,5 @@
 const express = require("express");
-const mysql = require("mysql2");
+const axios = require("axios");
 
 const app = express();
 
@@ -8,24 +8,28 @@ app.use(express.json());
 
 /*
 =====================================================
-DATABASE CONNECTION (InfinityFree MySQL)
+NEWS API
 =====================================================
 */
 
-const db = mysql.createConnection({
-    host: "sql201.infinityfree.com",
-    user: "if0_41707302",
-    password: "J2GvaCwZvzhg4",
-    database: "if0_41707302_newsroom"
-});
+const NEWS_API =
+"https://script.google.com/macros/s/AKfycbyoOkRYyXnodJiuoc-ZIKQWY1XhhTlKV8beGHIF0wTdP0EX2yP8rAmXpcAnkmYAXagT/exec";
 
-db.connect((err) => {
-    if (err) {
-        console.log("DB Error:", err.message);
-    } else {
-        console.log("Database Connected");
+/*
+=====================================================
+FETCH NEWS
+=====================================================
+*/
+
+async function fetchNews() {
+    try {
+        const res = await axios.get(NEWS_API);
+        return res.data;
+    } catch (err) {
+        console.log("API Error:", err.message);
+        return [];
     }
-});
+}
 
 /*
 =====================================================
@@ -33,7 +37,7 @@ USSD ENDPOINT
 =====================================================
 */
 
-app.post("/ussd", (req, res) => {
+app.post("/ussd", async (req, res) => {
 
     const text = (req.body.text || "").trim();
 
@@ -65,27 +69,24 @@ app.post("/ussd", (req, res) => {
 
     if (text === "1") {
 
-        db.query(
-            "SELECT title FROM news ORDER BY id DESC LIMIT 5",
-            (err, results) => {
+        const news = await fetchNews();
 
-                if (err) {
-                    return res.send("END Database error");
-                }
+        if (!news.length) return res.send("END No news available");
 
-                let response = "CON Latest News\n";
+        let response = "CON Latest News\n";
 
-                results.forEach((row, i) => {
-                    response += `${i + 1}. ${row.title.substring(0, 50)}\n`;
-                });
+        news.slice(0, 5).forEach((item, i) => {
 
-                response += "0. Back";
+            const title = item.short_title || "No title";
+            const story = item.short_story || "";
 
-                res.send(response);
-            }
-        );
+            response += `${i + 1}. ${title}\n`;
+            response += `${story.substring(0, 40)}...\n\n`;
+        });
 
-        return;
+        response += "0. Back";
+
+        return res.send(response);
     }
 
     /*
@@ -96,27 +97,20 @@ app.post("/ussd", (req, res) => {
 
     if (text === "2") {
 
-        db.query(
-            "SELECT title FROM news WHERE category='sports' ORDER BY id DESC LIMIT 5",
-            (err, results) => {
+        const news = await fetchNews();
+        const filtered = news.filter(n => n.category === "sports");
 
-                if (err) {
-                    return res.send("END Database error");
-                }
+        let response = "CON Sports News\n";
 
-                let response = "CON Sports News\n";
+        filtered.slice(0, 5).forEach((item, i) => {
 
-                results.forEach((row, i) => {
-                    response += `${i + 1}. ${row.title.substring(0, 50)}\n`;
-                });
+            response += `${i + 1}. ${item.short_title}\n`;
+            response += `${(item.short_story || "").substring(0, 40)}...\n\n`;
+        });
 
-                response += "0. Back";
+        response += "0. Back";
 
-                res.send(response);
-            }
-        );
-
-        return;
+        return res.send(response);
     }
 
     /*
@@ -127,27 +121,20 @@ app.post("/ussd", (req, res) => {
 
     if (text === "3") {
 
-        db.query(
-            "SELECT title FROM news WHERE category='technology' ORDER BY id DESC LIMIT 5",
-            (err, results) => {
+        const news = await fetchNews();
+        const filtered = news.filter(n => n.category === "technology");
 
-                if (err) {
-                    return res.send("END Database error");
-                }
+        let response = "CON Technology News\n";
 
-                let response = "CON Technology News\n";
+        filtered.slice(0, 5).forEach((item, i) => {
 
-                results.forEach((row, i) => {
-                    response += `${i + 1}. ${row.title.substring(0, 50)}\n`;
-                });
+            response += `${i + 1}. ${item.short_title}\n`;
+            response += `${(item.short_story || "").substring(0, 40)}...\n\n`;
+        });
 
-                response += "0. Back";
+        response += "0. Back";
 
-                res.send(response);
-            }
-        );
-
-        return;
+        return res.send(response);
     }
 
     /*
@@ -158,27 +145,20 @@ app.post("/ussd", (req, res) => {
 
     if (text === "4") {
 
-        db.query(
-            "SELECT title FROM news WHERE category='entertainment' ORDER BY id DESC LIMIT 5",
-            (err, results) => {
+        const news = await fetchNews();
+        const filtered = news.filter(n => n.category === "entertainment");
 
-                if (err) {
-                    return res.send("END Database error");
-                }
+        let response = "CON Entertainment News\n";
 
-                let response = "CON Entertainment News\n";
+        filtered.slice(0, 5).forEach((item, i) => {
 
-                results.forEach((row, i) => {
-                    response += `${i + 1}. ${row.title.substring(0, 50)}\n`;
-                });
+            response += `${i + 1}. ${item.short_title}\n`;
+            response += `${(item.short_story || "").substring(0, 40)}...\n\n`;
+        });
 
-                response += "0. Back";
+        response += "0. Back";
 
-                res.send(response);
-            }
-        );
-
-        return;
+        return res.send(response);
     }
 
     /*
@@ -193,7 +173,7 @@ app.post("/ussd", (req, res) => {
 
     /*
     =======================
-    BACK TO MENU
+    BACK
     =======================
     */
 
@@ -213,18 +193,12 @@ app.post("/ussd", (req, res) => {
         );
     }
 
-    /*
-    =======================
-    INVALID
-    =======================
-    */
-
     return res.send("END Invalid choice");
 });
 
 /*
 =====================================================
-START SERVER (RENDER USES PORT ENV)
+START SERVER
 =====================================================
 */
 
