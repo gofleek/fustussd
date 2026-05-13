@@ -38,7 +38,7 @@ async function fetchNews() {
 
         const res = await axios.get(NEWS_API);
 
-        return res.data;
+        return res.data.data;
 
     } catch (err) {
 
